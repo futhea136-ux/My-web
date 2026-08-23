@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>即时零售门店履约质量分析与运营优化报告</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#2b3440; --ink-2:#5b6b7c;
+    --brand:#1f4e8c; --brand-2:#2f6db5; --line:#e3e8ef;
+    --red:#d64541; --red-bg:#fdecea; --amber:#e08a00; --amber-bg:#fdf3e0;
+    --green:#2e9e5b; --green-bg:#e9f7ee; --blue-bg:#eaf2fb;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI",-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.75; font-size:15px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px 80px;}
+
+  /* ===== Hero ===== */
+  header.hero{
+    background:linear-gradient(135deg,#16324f 0%,#1f4e8c 55%,#2f6db5 100%);
+    color:#fff; padding:56px 24px 40px; text-align:center;
+    border-bottom:4px solid #e08a00;
+  }
+  header.hero .tag{
+    display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);
+    padding:4px 14px;border-radius:999px;font-size:12.5px;letter-spacing:2px;margin-bottom:18px;
+  }
+  header.hero h1{font-size:30px;font-weight:700;letter-spacing:1px;margin-bottom:14px;}
+  header.hero p.sub{font-size:14.5px;opacity:.85;max-width:720px;margin:0 auto;}
+  .hero-meta{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px;
+  }
+  .hero-meta span{
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+    padding:6px 14px;border-radius:8px;font-size:12.5px;
+  }
+
+  /* ===== TOC ===== */
+  nav.toc{
+    position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
+    box-shadow:0 2px 10px rgba(31,78,140,.06);
+  }
+  nav.toc .inner{
+    max-width:1000px;margin:0 auto;padding:10px 24px;
+    display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  }
+  nav.toc .t-label{font-size:12.5px;color:var(--ink-2);margin-right:6px;white-space:nowrap;}
+  nav.toc a{
+    text-decoration:none;color:var(--ink-2);font-size:13px;
+    padding:4px 10px;border-radius:6px;white-space:nowrap;transition:.15s;
+  }
+  nav.toc a:hover{background:var(--blue-bg);color:var(--brand);}
+
+  /* ===== Sections ===== */
+  section{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:34px 38px;margin-top:26px;box-shadow:0 1px 4px rgba(31,78,140,.05);}
+  h2{
+    font-size:21px;color:var(--brand);padding-bottom:10px;margin-bottom:22px;
+    border-bottom:2px solid var(--line);display:flex;align-items:center;gap:10px;
+  }
+  h2 .no{
+    background:var(--brand);color:#fff;font-size:13px;border-radius:7px;
+    min-width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-weight:600;
+  }
+  h3{font-size:16.5px;color:var(--ink);margin:26px 0 12px;padding-left:10px;border-left:4px solid var(--brand-2);}
+  h4{font-size:14.5px;color:var(--ink);margin:18px 0 8px;}
+  p{margin:10px 0;}
+  ul,ol{margin:10px 0 10px 22px;}
+  li{margin:6px 0;}
+  strong{color:#17324f;}
+  em{color:var(--ink-2);}
+
+  /* ===== Tables ===== */
+  .tbl-wrap{overflow-x:auto;margin:16px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px;}
+  thead th{
+    background:var(--brand);color:#fff;font-weight:600;text-align:left;
+    padding:10px 12px;white-space:nowrap;
+  }
+  tbody td{padding:9px 12px;border-bottom:1px solid var(--line);}
+  tbody tr:nth-child(even){background:#f8fafc;}
+  tbody tr:hover{background:var(--blue-bg);}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .neg{color:var(--red);font-weight:600;}
+  .up{color:var(--green);font-weight:600;}
+  .warn{color:var(--amber);font-weight:600;}
+
+  /* ===== Badges ===== */
+  .badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.5px;}
+  .bA{background:var(--green-bg);color:var(--green);border:1px solid #bfe6cf;}
+  .bB{background:var(--amber-bg);color:var(--amber);border:1px solid #f2d9a4;}
+  .bC{background:var(--red-bg);color:var(--red);border:1px solid #f5c6c3;}
+
+  /* ===== KPI ===== */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0;}
+  .kpi{background:linear-gradient(180deg,#fafcff,#f2f6fb);border:1px solid var(--line);border-radius:10px;padding:16px 14px;text-align:center;}
+  .kpi .v{font-size:21px;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums;}
+  .kpi .k{font-size:12px;color:var(--ink-2);margin-top:5px;}
+  @media(max-width:720px){.kpis{grid-template-columns:repeat(2,1fr);}}
+
+  /* ===== Figures ===== */
+  figure{margin:20px 0;text-align:center;}
+  figure img{
+    max-width:100%;border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 4px 16px rgba(31,78,140,.10);background:#fff;
+  }
+  figcaption{font-size:12.5px;color:var(--ink-2);margin-top:10px;padding:0 8px;}
+  .chart-conclusion{font-size:13px;color:var(--ink);background:#f7f9fc;border-left:3px solid var(--blue);padding:9px 12px;margin:10px 8px 0;line-height:1.7;}
+
+  /* ===== Callouts ===== */
+  .callout{border-radius:10px;padding:14px 18px;margin:16px 0;font-size:13.5px;border:1px solid;}
+  .co-blue{background:var(--blue-bg);border-color:#c3daf2;color:#1f4e8c;}
+  .co-red{background:var(--red-bg);border-color:#f2c2bf;color:#a3322e;}
+  .co-amber{background:var(--amber-bg);border-color:#f0d6a4;color:#8a5c00;}
+  .co-green{background:var(--green-bg);border-color:#bce3cb;color:#1e6e41;}
+  .callout b.t{display:block;margin-bottom:4px;font-size:13.5px;}
+
+  /* ===== Suggestion cards ===== */
+  .sug{border:1px solid var(--line);border-left:4px solid var(--brand-2);border-radius:10px;
+    padding:16px 20px;margin:14px 0;background:#fbfcfe;}
+  .sug .st{font-weight:700;color:var(--brand);font-size:14.5px;margin-bottom:6px;}
+  .sug.p1{border-left-color:var(--red);}
+  .sug.p1 .st{color:var(--red);}
+  .sug ul{margin-top:6px;}
+
+  footer{text-align:center;color:var(--ink-2);font-size:12.5px;margin-top:40px;padding-top:20px;border-top:1px solid var(--line);}
+
+  .node{background:#f8fafc;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:12px 16px;margin:12px 0;}
+  .node b{color:var(--amber);}
+  @media(max-width:640px){
+    section{padding:24px 18px;}
+    header.hero h1{font-size:23px;}
+    header.hero{padding:40px 18px 30px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <span class="tag">履约质量 · 运营优化 · 数据分析</span>
+  <h1>即时零售门店履约质量分析报告</h1>
+  <p class="sub">用数据看清：平台哪里变了、门店差异多大、下一步先做什么</p>
+  <div class="hero-meta">
+    <span>数据来源：公开数据集</span>
+<span>分析周期：2025-06 ~ 2026-06（13 个月）</span>
+    <span>门店数量：10 家前置仓门店</span>
+    <span>粒度：每日 × 每店</span>
+  </div>
+</header>
+
+<!-- ================= TOC ================= -->
+<nav class="toc">
+  <div class="inner">
+    <span class="t-label">目录</span>
+    <a href="#s0">0 管理层结论</a>
+    <a href="#s1">1 背景与目标</a>
+    <a href="#s2">2 数据说明</a>
+    <a href="#s3">3 平台整体表现</a>
+    <a href="#s4">4 门店履约质量</a>
+    <a href="#s5">5 问题归因</a>
+    <a href="#s6">6 运营建议</a>
+    <a href="#s7">7 总结</a>
+    <a href="#s8">附录</a>
+    <a href="#s9">补充计算</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ================= 0 管理层一页结论 ================= -->
+<section id="s0">
+  <h2><span class="no">0</span>管理层一页结论</h2>
+  <div class="callout co-amber">
+    <ol>
+<li><strong>平台级异常：</strong>2026 年 4 月上旬出现四类质量率同步跳变。</li>
+      <li><strong>门店不是当前首要解释：</strong>10 家门店以相近幅度变化，P2 的异常更接近平台级现象。</li>
+      <li><strong>最大疑点：</strong>支付订单与履约执行任务的数量关系出现变化，需优先核查多单分拣上线、任务生成规则和统计时间口径。</li>
+      <li><strong>决策边界：</strong>在口径统一前，不建议直接用 P1/P2 的跨期差异评价运营改善效果。</li>
+    </ol>
+  </div>
+<p class="note"><strong>证据分层：</strong>“2026 年 4 月上旬同步跳变”和“跨层级数量关系变化”是数据事实；“口径、规则或多单分拣变化”是强线索；真实原因仍需业务、数据和系统记录共同验证。</p>
+</section>
+
+<!-- ================= 1 背景与目标 ================= -->
+<section id="s1">
+  <h2><span class="no">1</span>背景与目标</h2>
+  <p>本报告基于<strong>即时零售前置仓自营履约业务</strong>场景。业务模式为：社区前置仓囤货 → 站内分拣复核 → 同城即时配送，关键履约环节包括支付、分拣、交付及售后反馈。</p>
+  <p>本报告聚焦以下三问：</p>
+  <ol>
+    <li><strong>Q1</strong>：平台整体履约表现随时间如何变化？</li>
+    <li><strong>Q2</strong>：不同门店之间的履约质量是否存在显著差异？哪些门店需要重点关注？</li>
+    <li><strong>Q3</strong>：导致履约质量异动的主要因素是什么？哪些可以通过运营动作改善？</li>
+  </ol>
+  <h3>三问直答</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>问题</th><th>明确结论</th><th>主要证据</th><th>报告对应章节/行动</th></tr></thead>
+      <tbody>
+<tr><td><strong>Q1</strong><br>平台整体表现如何变化？</td><td>整体呈“前稳后异”：2026 年 4 月之前相对稳定，4 月起四类质量率同步抬升，且支付订单与履约执行任务的跨层级数量关系发生变化。</td><td>月度趋势、4 月前后变化、跨层级数量差异</td><td>第 3、5 章；先核查单据链路，再进行跨期评价</td></tr>
+        <tr><td><strong>Q2</strong><br>门店差异是否显著？</td><td>P1 稳定期存在有限的相对差异，但整体差距较小；P2 各店相近幅度恶化，当前不宜把异常归因于少数门店。</td><td>门店排名、风险散点、客诉增量占比、CV</td><td>第 4 章；A 级作流程对照，C 级作验证样本</td></tr>
+<tr><td><strong>Q3</strong><br>主要因素及可改善项是什么？</td><td>主要线索包括多单分拣模式切换带来的任务结构变化，以及高量日、周末运力压力；前者待核验，后者可通过运力和时段管理改善。</td><td>跨层级数量差异、4 月上旬变化窗口、9 月量率关系、周末超时差异</td><td>第 5、6 章；先做单据链路核查，再做运力验证和门店流程改善</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= 2 数据说明 ================= -->
+<section id="s2">
+  <h2><span class="no">2</span>数据说明</h2>
+
+  <h3>2.1 数据口径</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>字段</th><th>口径</th><th>用于计算的指标</th></tr></thead>
+      <tbody>
+        <tr><td>支付订单量</td><td>用户完成支付的订单数</td><td>规模、超时率分母</td></tr>
+        <tr><td>履约订单数</td><td>已完成履约的订单数</td><td>规模、客诉率 / 少送率分母</td></tr>
+        <tr><td>超时订单数</td><td>时效偏差订单数</td><td>超时率 = 超时订单数 / 支付订单量</td></tr>
+        <tr><td>客诉量</td><td>履约反馈数</td><td>客诉率 = 客诉量 / 履约订单数</td></tr>
+        <tr><td>少送订单数</td><td>交付差错反馈数</td><td>少送率 = 少送订单数 / 履约订单数</td></tr>
+        <tr><td>商品成交量（pcs）</td><td>成交商品件数</td><td>规模、质量反馈率分母</td></tr>
+        <tr><td>质量客诉（pcs）</td><td>商品质量反馈件数</td><td>质量反馈率 = 质量客诉 / 商品成交量</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>2.2 数据质量</h3>
+  <ul>
+    <li>原始文件共 9182 行，其中尾部 5232 行为空白行，<strong>有效记录为 3950 行</strong>。</li>
+<li>有效记录为 <strong>10 家门店 × 395 天</strong>（2025 年 6 月 ~ 2026 年 6 月），无日期或门店缺失。</li>
+    <li>4 个率值（超时率、客诉率、少送率、质量反馈率）均能用分子 / 分母复算，口径一致。</li>
+    <li>存在 747 行「履约订单数 &gt; 支付订单量」，其中 716 行集中在 2026-04 ~ 2026-06；如果只看“履约比支付多 100 单以上”，则是 688 行。两种数字的筛选条件不同。</li>
+  </ul>
+
+  <h3>2.3 分析阶段划分</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>阶段</th><th>时间范围</th><th>定义</th></tr></thead>
+      <tbody>
+<tr><td><strong>P1（稳定期）</strong></td><td>2025 年 6 月 ~ 2026 年 3 月</td><td>各项指标稳定、口径正常</td></tr>
+<tr><td><strong>P2（异常期）</strong></td><td>2026 年 4 月 ~ 2026 年 6 月</td><td>四率跳升、履约执行任务/支付订单关系变化</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:13px;color:var(--ink-2);">切点选择依据见第 5 章「问题归因」。</p>
+</section>
+
+<!-- ================= 3 平台整体表现 ================= -->
+<section id="s3">
+  <h2><span class="no">3</span>平台整体表现</h2>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">10,625,051</div><div class="k">支付订单量（单）</div></div>
+    <div class="kpi"><div class="v">11,293,661</div><div class="k">履约订单数（单）</div></div>
+    <div class="kpi"><div class="v">72,491,837</div><div class="k">商品成交量（pcs）</div></div>
+    <div class="kpi"><div class="v">1.063</div><div class="k">履约 / 支付比值</div></div>
+  </div>
+
+  <h3>3.1 交易规模：订单量在 P2 出现“支付降、履约升”的背离</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="num">指标</th><th class="num">P1 稳定期日均</th><th class="num">P2 异常期日均</th><th class="num">变化</th></tr></thead>
+      <tbody>
+        <tr><td>支付订单量</td><td class="num">27,717</td><td class="num">24,167</td><td class="num neg">-12.8%</td></tr>
+        <tr><td>履约订单数</td><td class="num">27,312</td><td class="num">32,865</td><td class="num neg">+20.3%</td></tr>
+        <tr><td>商品成交量</td><td class="num">177,112 pcs</td><td class="num">204,942 pcs</td><td class="num up">+15.7%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout co-amber">
+    <b class="t">关键观察</b>
+    P2 支付订单量下降，但履约订单数反而明显上升。正常业务逻辑下，履约订单数不应长期、持续、大幅高于支付订单量。这种背离提示 P2 的<strong>“履约订单数”统计口径或业务规则可能发生变化</strong>，需在归因时优先考虑。
+  </div>
+  <figure>
+    <img src="charts/fig1_monthly_scale.png" alt="月度规模走势">
+    <figcaption>图 1：平台月度规模走势。2026-04 起支付与履约出现背离（橙色柱高于蓝色柱）。</figcaption>
+    <p class="chart-conclusion"><strong>分析结论：</strong>2026-04 起支付订单下降而履约订单上升，二者不再呈正常同步关系；这支持“先核查履约订单口径”的判断，但不能单凭图表证明系统或规则已变更。</p>
+  </figure>
+
+  <h3>3.2 履约质量：P2 四率全面跳升</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="num">指标</th><th class="num">P1 稳定期</th><th class="num">P2 异常期</th><th class="num">变化</th></tr></thead>
+      <tbody>
+        <tr><td>超时率</td><td class="num">2.50%</td><td class="num">4.15%</td><td class="num warn">+1.65 pct</td></tr>
+        <tr><td>客诉率</td><td class="num">0.125%</td><td class="num">1.091%</td><td class="num neg">约 8.7 倍</td></tr>
+        <tr><td>少送率</td><td class="num">0.082%</td><td class="num">0.321%</td><td class="num neg">约 3.9 倍</td></tr>
+        <tr><td>质量反馈率</td><td class="num">0.028%</td><td class="num">0.124%</td><td class="num neg">约 4.4 倍</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figure>
+    <img src="charts/fig2_monthly_rates.png" alt="月度履约质量率值">
+<figcaption>图 2：平台月度履约质量率值。2026 年 4 月起，超时率、客诉率、少送率、质量反馈率同步跳升；其中客诉率升幅最大。</figcaption>
+    <p class="chart-conclusion"><strong>分析结论：</strong>P2 四类率值均高于 P1，其中客诉率相对变化最大；这是平台级异常的结果表现，原因仍需结合口径、系统和业务事件核查。</p>
+  </figure>
+
+  <h3>3.3 异常节点</h3>
+
+  <div class="node">
+    <b>节点 A：2025-09 波峰压力期</b>
+    <ul>
+      <li>9 月支付订单量 923,536，为全年次高；超时率 4.47%、客诉率 0.182%、少送率 0.113%，均为 P1 最高。</li>
+      <li>9 月订单量越大的日子，超时和客诉通常也越高；其他月份没有看到同样稳定的关系。因此，这更像 9 月特定高峰现象，不代表订单量一定会导致问题。</li>
+<li>放量日主要集中在 2025 年 9 月中下旬，部分高量日的超时率超过 6%。</li>
+    </ul>
+    <p style="margin:6px 0 0;">判断：2025-09 的率值上升与订单波峰同步，初步提示可能存在履约弹性不足；但因果关系仍需结合排班、运力、订单时段和商品结构数据验证。</p>
+  </div>
+
+  <div class="node">
+<b>节点 B：2026 年 4 月上旬突变</b>
+    <ul>
+<li>2026 年 4 月之前，履约执行任务/支付订单比长期稳定在约 0.985~0.990。</li>
+<li>2026 年 4 月上旬，该比值升至约 1.33，客诉率也从约 0.10% 抬升；随后继续升至约 2.24 和 1.13%。</li>
+      <li>04-06 起，所有率值均进入高位平台期，持续至 6 月底。</li>
+    </ul>
+<p style="margin:6px 0 0;">结论：2026 年 4 月上旬出现<strong>明确的平台级突变</strong>，不是渐进式恶化。</p>
+  </div>
+</section>
+
+<!-- ================= 4 门店履约质量 ================= -->
+<section id="s4">
+  <h2><span class="no">4</span>门店履约质量</h2>
+
+  <h3>4.1 门店规模：体量高度均匀</h3>
+  <p>10 家门店的支付订单量占比在 <strong>9.66%~10.25%</strong> 之间，最大差约 0.59 个百分点，可以认为业务体量无显著差异。因此门店间的质量差异不太可能是“大店忙不过来”导致的系统性偏差。</p>
+
+  <h3>4.2 门店质量排名（P1 稳定期）</h3>
+  <div class="callout co-blue">
+    <b class="t">口径说明</b>
+    由于 P2 存在平台级异常，门店排名以 <strong>P1 稳定期</strong>为准，避免 P2 的口径变化扭曲门店真实水平。
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="num">排名</th><th>门店</th><th class="num">超时率</th><th class="num">客诉率</th><th class="num">少送率</th><th class="num">质量反馈率</th><th class="num">综合评分</th><th>综合分级</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>通和门店</td><td class="num">2.339%</td><td class="num">0.116%</td><td class="num">0.080%</td><td class="num">0.027%</td><td class="num">7.4</td><td><span class="badge bA">A</span></td></tr>
+        <tr><td class="num">2</td><td>西启门店</td><td class="num">2.382%</td><td class="num">0.117%</td><td class="num">0.076%</td><td class="num">0.028%</td><td class="num">15.5</td><td><span class="badge bA">A</span></td></tr>
+        <tr><td class="num">3</td><td>方澜门店</td><td class="num">2.480%</td><td class="num">0.121%</td><td class="num">0.080%</td><td class="num">0.027%</td><td class="num">29.1</td><td><span class="badge bA">A</span></td></tr>
+        <tr><td class="num">4</td><td>天和门店</td><td class="num">2.455%</td><td class="num">0.123%</td><td class="num">0.078%</td><td class="num">0.028%</td><td class="num">34.1</td><td><span class="badge bB">B</span></td></tr>
+        <tr><td class="num">5</td><td>锦序门店</td><td class="num">2.324%</td><td class="num">0.127%</td><td class="num">0.084%</td><td class="num">0.029%</td><td class="num">38.1</td><td><span class="badge bB">B</span></td></tr>
+        <tr><td class="num">6</td><td>长盈门店</td><td class="num">2.543%</td><td class="num">0.123%</td><td class="num">0.083%</td><td class="num">0.027%</td><td class="num">45.4</td><td><span class="badge bB">B</span></td></tr>
+        <tr><td class="num">7</td><td>亦呈门店</td><td class="num">2.611%</td><td class="num">0.127%</td><td class="num">0.082%</td><td class="num">0.028%</td><td class="num">60.6</td><td><span class="badge bB">B</span></td></tr>
+        <tr><td class="num">8</td><td>望澜门店</td><td class="num">2.593%</td><td class="num">0.133%</td><td class="num">0.086%</td><td class="num">0.028%</td><td class="num">75.3</td><td><span class="badge bC">C</span></td></tr>
+        <tr><td class="num">9</td><td>回澄门店</td><td class="num">2.698%</td><td class="num">0.129%</td><td class="num">0.086%</td><td class="num">0.029%</td><td class="num">82.8</td><td><span class="badge bC">C</span></td></tr>
+        <tr><td class="num">10</td><td>双禾门店</td><td class="num">2.578%</td><td class="num">0.135%</td><td class="num">0.090%</td><td class="num">0.029%</td><td class="num">86.3</td><td><span class="badge bC">C</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:13px;color:var(--ink-2);">评分方法：先在 10 家门店内对每项率值做 0~100 的 Min-Max 标准化，再按超时率 40%、客诉率 30%、少送率 20%、质量反馈率 10% 加权求和：综合评分 = 0.4×超时标准分 + 0.3×客诉标准分 + 0.2×少送标准分 + 0.1×质量反馈标准分。评分越低越好；按三分位分为 A/B/C 三级。该评分用于相对比较，不代表绝对服务等级。
+  </p>
+
+  <h3>4.3 门店风险散点图</h3>
+  <figure>
+    <img src="charts/fig3_store_scatter.png" alt="门店风险散点图">
+    <figcaption>图 3：P1 稳定期门店风险散点。横轴为超时率，纵轴为客诉率，气泡大小为订单量，颜色为 A/B/C 分级。10 家门店均集中在狭窄的带状区域，差异有限。</figcaption>
+    <p class="chart-conclusion"><strong>分析结论：</strong>门店点位集中，说明 P1 的门店差异存在但幅度有限；C 级门店可作为复盘样本，不能仅凭散点图认定其为 P2 异常根因。</p>
+    <p class="chart-conclusion"><strong>重点关注：</strong>以 P1 门店平均超时率和平均客诉率为分界，右上象限的亦呈、望澜、回澄、双禾同时表现为相对较高的超时率和客诉率，应优先核查排班、拣货、交接和客诉明细。其中双禾、望澜、回澄的客诉率相对更高；该结果用于确定复盘优先级，不等同于确认门店责任。</p>
+  </figure>
+
+  <h3>4.4 门店级 vs 平台级：P2 是同步恶化</h3>
+  <ul>
+    <li>P1 阶段门店间客诉率 CV 为 <strong>4.90%</strong>，P2 为约 <strong>1.16%</strong>，说明按整月汇总后，各店 P2 客诉率水平更集中。</li>
+    <li>P2 客诉增量按门店拆分占比 <strong>8.45%~11.93%</strong>，整体仍接近均分，未显示由少数门店主导。</li>
+  </ul>
+  <div class="callout co-red">
+    <b class="t">结论</b>
+    P2 的恶化不是“某几家门店单独出问题”，而是 10 家门店以相近幅度<strong>同步恶化</strong>。问题根因应在<strong>平台级</strong>（规则、口径、统一业务事件、系统因素），而非门店运营差异。
+  </div>
+</section>
+
+<!-- ================= 5 问题归因 ================= -->
+<section id="s5">
+  <h2><span class="no">5</span>问题原因与判断</h2>
+
+  <h3>5.1 怎么判断</h3>
+  <ul>
+    <li>先看时间趋势，再比较门店，最后核对订单口径和业务事件。</li>
+<li>区分“水平跳变”（2026 年 4 月上旬四率同步抬升）和“波动形态”（异常期内部的日内/日际波动）。</li>
+    <li>同步变化只能作为线索，不能直接当成因果证明。</li>
+  </ul>
+
+  <h3>5.2 2025 年 9 月：订单高峰时更容易超时</h3>
+  <ul>
+    <li>9 月日支付量与超时率、客诉率均呈显著正相关（rho=0.66、0.73）。</li>
+<li>2025 年 9 月中下旬的高放量日超时率超过 6%，处于稳定期较高水平。</li>
+    <li>10 月起订单量回落，率值同步回落。</li>
+  </ul>
+  <div class="callout co-green"><b class="t">图表结论与边界</b>图 4 支持“9 月高量日与超时率同向变化”的判断，提示可能存在履约弹性不足；但相关性不是因果关系，仍需排班、运力、时段和商品结构数据验证。</div>
+  <figure>
+    <img src="charts/fig6_sep_peak.png" alt="2025-09 波峰">
+    <figcaption>图 4：2025-09 日支付量与超时率关系。9 月订单量越大，超时率越高，呈现明显的波峰压力特征。</figcaption>
+    <p class="chart-conclusion"><strong>分析结论：</strong>横轴是日支付订单量，纵轴是当日超时率；9 月红点整体向右上方分布，表示高量日往往伴随更高超时率。</p>
+  </figure>
+
+  <h3>5.3 2026 年 4 月：出现平台级变化</h3>
+  <figure>
+    <img src="charts/fig5_cluster_monthly_orders.svg" alt="支付订单量与履约执行任务量月度对比">
+    <img src="charts/fig4_switch_daily_lower.png" alt="客诉率、少送率与质量反馈率逐日走势">
+<figcaption>图 5：上图为支付订单量与履约执行任务量月度对比；下图保留原报告中的客诉率、少送率与质量反馈率逐日走势。两部分分别用于观察数量关系和履约质量变化。</figcaption>
+<p class="chart-conclusion"><strong>分析结论：</strong>2026 年 4 月前后多项指标在同一时间窗口发生跳变，支持“平台级变化窗口”判断；图表只能定位异常发生时期，不能单独确定异常原因。</p>
+  </figure>
+  <h4>关键证据</h4>
+  <ol>
+<li><strong>时期变化明确</strong>：2026 年 4 月之前指标相对稳定，4 月起多项指标同步抬升。</li>
+    <li><strong>普遍性</strong>：10 家门店同时恶化，且客诉增量占比接近均分。</li>
+    <li><strong>四率内部相关性分化</strong>：
+      <ul>
+        <li>P2 内，<strong>客诉率与质量反馈率的日变化高度同步</strong>，说明两者可能受到相近因素影响。</li>
+        <li>P2 内，超时率与客诉率、少送率、质量反馈率<strong>均不相关</strong>。</li>
+        <li>通俗解释：P2 内客诉率和质量反馈率的日变化较同步，可能受相近因素影响；超时率与它们不同步，提示超时可能是另一条问题链路。但这只是相关性线索，不等于已证明存在同一原因。</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h3>5.4 支付订单与履约执行任务的关系发生变化</h3>
+  <figure>
+    <img src="charts/fig5_gap_diag_quadrant_left_91d.svg" alt="左侧GAP与超时率四象限、右侧逐日变化图">
+    <figcaption>图 6：P2（2026 年 4 月 1 日~6 月 30 日，共91天）GAP 与超时率关系。左图为基于 P2 日汇总中位数划分的四象限，右图保留 GAP 与超时率的逐日变化；Spearman r=0.976，四舍五入为0.98。</figcaption>
+    <p class="chart-conclusion"><strong>图表解释：</strong>这里的差值不是订单增减 KPI，而是“履约执行任务数 − 支付订单量”的跨层级数量差异。由于一笔支付订单可能对应多个任务，差值不必接近 0；本图只用于观察支付侧与履约执行侧的关系是否在某个时间点发生变化。</p>
+  </figure>
+  <ul>
+    <li>P2 内，跨层级数量差异与超时率的变化高度同步，说明多单分拣任务结构、异常任务或统计时间关系都需要进一步核查。</li>
+    <li>P1 阶段执行任务数略低于支付订单量，P2 阶段执行任务数相对更多且波动扩大；这需要结合拆单、合单、补拣、重拣和任务关闭规则解释。</li>
+    <li>履约订单数日均从 P1 的 2.73 万升至 P2 的 3.29 万（+20.3%），而支付订单量从 2.77 万降至 2.42 万（-12.8%）。</li>
+  </ul>
+  <div class="callout co-red">
+    <b class="t">归因判断</b>
+    当前最优先核查的是 2026 年 4 月起<strong>履约执行任务的生成逻辑、单据链路和多单分拣上线情况</strong>。原因是支付订单与履约执行任务的跨层级关系发生变化，且差值与超时率同步变化；但这仍是数据线索，不是已确认事实。
+  </div>
+  <div class="callout co-blue">
+    <b class="t">如果确认口径没有变化</b>
+    如果数据定义、取数逻辑和系统规则在 2026 年 4 月前后均保持一致，那么结论应切换为：<strong>平台在 2026 年 4 月起发生了真实的整体履约恶化</strong>。这不是少数门店单独造成的，因为 10 家门店都以相近幅度变化；但仅凭当前数据还不能判断具体是分拣能力、配送运力、订单结构，还是其他业务环节导致。下一步应补充小时级订单、拣货耗时、配送接单/完成时间、缺货和取消明细，定位真实瓶颈。
+  </div>
+  <div class="callout co-blue">
+    <b class="t">多单分拣是待验证假设</b>
+    如果 2026 年 4—6 月期间由原来的<strong>AB 单分拣切换为多单分拣</strong>，系统可能新增批次、拣货任务、补拣或重拣记录，使一笔支付订单对应多条履约执行记录。需要用上线日期、单据映射关系和 AB 单/多单分组数据验证；在验证前，不能把这种关系直接认定为统计错误或真实履约恶化。
+  </div>
+  <div class="callout co-amber">
+    <b class="t">重要声明</b>
+    以上是基于数据相关性的强线索，不是已确认的业务事实。建议下运营结论前，先与数据提供方确认 2026 年 4 月是否存在口径调整、系统升级或业务规则变更；在确认前，不宜把异常期的率值跳升全部归因于真实履约恶化。
+  </div>
+
+  <div class="callout co-blue">
+  <b class="t">5.4 注释：GAP—超时率异常分类与核查逻辑</b>
+  <p>为避免把跨层级的 GAP 直接解释为业务损失，本报告将 P2 每日 GAP 与超时率分别同各自的 P2 中位数比较，用于确定核查优先级。</p>
+  <table>
+    <thead><tr><th>异常类型</th><th>GAP</th><th>超时率</th><th>分析含义</th><th>优先核查方向</th></tr></thead>
+    <tbody>
+      <tr><td>高压力型</td><td>高</td><td>高</td><td>履约任务差额扩大且时效同步恶化</td><td>分拣能力、排班、配送运力、峰值订单</td></tr>
+      <tr><td>任务结构型</td><td>高</td><td>低</td><td>任务数量偏多，但暂未明显影响时效</td><td>多单分拣、拆单、补拣、重拣、任务生成规则</td></tr>
+      <tr><td>履约资源不足型</td><td>低</td><td>高</td><td>任务差额不高，但时效已经恶化</td><td>库存、拣货、配送交接、系统下发</td></tr>
+      <tr><td>相对正常型</td><td>低</td><td>低</td><td>暂未发现明显异常信号</td><td>持续监控并作为对照样本</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>5.5 其他辅助发现</h3>
+  <ul>
+    <li><strong>周末效应</strong>：P1 周末超时率略高于工作日（2.57% vs 2.47%）；P2 周末超时率显著高于工作日（5.50% vs 3.60%），但客诉率无显著差异。P2 的周末运力紧张有所加剧。</li>
+    <li><strong>规模-质量关系</strong>：P1 阶段门店规模与超时率、客诉率、少送率均无显著相关；仅与质量反馈率有中等正相关（rho=0.64，p=0.048），但 10 店样本较小，不视为稳定规律。</li>
+  </ul>
+</section>
+
+<!-- ================= 6 运营建议 ================= -->
+<section id="s6">
+  <h2><span class="no">6</span>运营建议</h2>
+  <p>建议按优先级和对应归因分层：</p>
+
+  <h3>6.1 建议闭环：动作—数据—判断标准</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>优先级</th><th>验证/动作</th><th>所需数据</th><th>判断标准</th></tr></thead>
+      <tbody>
+<tr><td><strong>P0</strong></td><td>核查履约执行任务定义及 2026 年 4 月前后 SQL/指标逻辑</td><td>指标字典、取数 SQL、系统变更记录</td><td>确认前后口径是否一致，并解释跨层级数量关系变化</td></tr>
+        <tr><td><strong>P0</strong></td><td>按统一口径重算 P1/P2 指标</td><td>支付订单、完成履约订单、取消/异常订单明细</td><td>若重算后跳变明显收窄，优先判定为口径/规则影响</td></tr>
+        <tr><td><strong>P1</strong></td><td>拆解周末超时问题</td><td>小时订单、分拣耗时、配送接单量、运力排班</td><td>定位到具体时段或环节后，再配置周末资源</td></tr>
+        <tr><td><strong>P2</strong></td><td>用 A 级门店作流程对照、C 级门店做小范围复盘</td><td>拣货、复核、缺货、客诉明细</td><td>找到可复制流程证据后再推广，不据评级直接认定根因</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sug p1">
+<div class="st">高优先级 · 先确认 2026 年 4 月异动的真实原因</div>
+    <ul>
+<li><strong>数据口径核查</strong>：确认 2026 年 4 月起“履约执行任务数”的统计口径是否变更，是否开始包含未支付订单、延迟履约任务、补拣或重拣任务。</li>
+      <li><strong>业务事件核查</strong>：确认当天是否有系统升级、规则调整、活动策略切换。</li>
+      <li><strong>若确认是口径变化</strong>：后续所有跨期对比应以统一口径重新计算（例如以支付订单量或同一履约口径为基准），否则无法评估真实运营效果。</li>
+    </ul>
+  </div>
+
+  <div class="sug">
+    <div class="st">针对 2025-09 波峰压力</div>
+    <ul>
+      <li><strong>波峰运力弹性</strong>：在 9 月等历史高量月份提前储备分拣与配送人力。</li>
+      <li><strong>动态截单 / 分时段预约</strong>：在大促或放量日引导用户分时段下单，平滑波峰。</li>
+      <li><strong>高量日重点监控</strong>：对日订单量超过 3.5 万单的日期启动预警机制。</li>
+    </ul>
+  </div>
+
+  <div class="sug">
+    <div class="st">针对门店质量差异</div>
+    <ul>
+      <li><strong>A 级门店作为流程对照样本</strong>：通和、西启、方澜在 P1 稳定期表现较好，可核查其分拣动线、复核流程是否存在可复制做法。</li>
+      <li><strong>C 级门店作为验证样本</strong>：双禾、回澄、望澜相对靠后，可专项复盘超时和客诉环节，但不据此直接认定门店是 P2 异常根因。</li>
+      <li><strong>注意</strong>：门店间差异较小，P2 又同步恶化，因此门店治理应作为<strong>持续改善项</strong>，而非当前异动的首要抓手。</li>
+    </ul>
+  </div>
+
+  <div class="sug">
+    <div class="st">针对周末效应</div>
+    <ul>
+      <li><strong>周末运力倾斜</strong>：P2 周末超时率显著高于工作日，建议在周末增加分拣与配送资源。</li>
+      <li><strong>周末提前备货</strong>：若周末订单结构可预测，可提前至周五完成部分热销品备货。</li>
+    </ul>
+  </div>
+
+  <div class="sug">
+    <div class="st">数据治理建议</div>
+    <ul>
+      <li>统一“履约订单数”与“支付订单量”的定义边界，避免同一指标在不同时间段口径不一致。</li>
+      <li>建立异常切点监控：当履约 / 支付比值连续 3 天超过 1.05 时自动预警。</li>
+      <li>对率值指标保留分子分母明细，便于口径核对。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 7 总结 ================= -->
+<section id="s7">
+  <h2><span class="no">7</span>总结</h2>
+  <ol>
+<li><strong>平台整体</strong>：13 个月呈现“前稳后异”格局。P1（2025 年 6 月~2026 年 3 月）履约质量稳定；P2（2026 年 4 月~2026 年 6 月）四率全面跳升，且支付订单与履约执行任务的关系发生变化。</li>
+    <li><strong>异常节点</strong>：
+      <ul>
+        <li><strong>2025-09</strong>：波峰压力导致量-率同升，属于可预期的运营压力。</li>
+<li><strong>2026 年 4 月上旬</strong>：平台级突变窗口，10 家门店同步恶化，且支付订单与履约执行任务的关系出现明显变化，可能与多单分拣或任务规则有关。</li>
+      </ul>
+    </li>
+    <li><strong>门店差异</strong>：10 家门店体量接近，P1 阶段质量差异很小；P2 阶段各店同幅恶化。当前异动的根因不在门店运营，而在平台级因素。</li>
+    <li><strong>假设检验</strong>：
+      <ul>
+        <li>超时率与客诉率在月粒度和 P1 日粒度上均显著正相关，但在 P2 内部不相关，说明 P2 的两者驱动机制不同。</li>
+        <li>客诉率与质量反馈率在 P2 内部的相关性需按整月口径重新计算；即使相关，也只能作为共同变化线索，不能直接证明同一原因。</li>
+      </ul>
+    </li>
+<li><strong>下一步</strong>：建议在启动大规模运营动作前，先确认 2026 年 4 月是否存在多单分拣上线、任务规则调整或口径变化。只有在单据链路明确的基础上，才能准确评估运营改善效果。</li>
+  </ol>
+</section>
+
+<!-- ================= 附录 ================= -->
+<section id="s8">
+  <h2><span class="no">8</span>附录：核心数据速查</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>指标</th><th class="num">全周期 13 个月</th><th class="num">P1 稳定期</th><th class="num">P2 异常期</th></tr></thead>
+      <tbody>
+        <tr><td>支付订单量</td><td class="num">10,625,051</td><td class="num">8,425,888</td><td class="num">2,199,163</td></tr>
+        <tr><td>履约订单数</td><td class="num">11,293,661</td><td class="num">8,302,927</td><td class="num">2,990,734</td></tr>
+        <tr><td>商品成交量</td><td class="num">72,491,837 pcs</td><td class="num">53,842,086</td><td class="num">18,649,751</td></tr>
+        <tr><td>超时率</td><td class="num">2.84%</td><td class="num">2.50%</td><td class="num">4.15%</td></tr>
+        <tr><td>客诉率</td><td class="num">0.38%</td><td class="num">0.13%</td><td class="num">1.12%</td></tr>
+        <tr><td>少送率</td><td class="num">0.15%</td><td class="num">0.08%</td><td class="num">0.33%</td></tr>
+        <tr><td>质量反馈率</td><td class="num">0.053%</td><td class="num">0.028%</td><td class="num">0.124%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= 9 附录:补充计算说明 ================= -->
+<section id="s9">
+  <h2><span class="no">9</span>附录：补充计算说明（正文未详述口径）</h2>
+  <p>本附录只补充<strong>正文中出现但未说明算法</strong>的计算项；已在 2.1 数据口径中定义的超时率 / 客诉率 / 少送率 / 质量反馈率公式，以及 2.3 的 P1 / P2 时间段定义，此处不再重复。</p>
+
+  <h3>C1. 累计、日均与分阶段天数</h3>
+  <ul>
+    <li><strong>全周期累计</strong>（如支付订单量 10,625,051）= 10 家门店 × 395 天逐日记录加总。</li>
+    <li><strong>阶段计算范围</strong>：P1 为 2025 年 6 月 1 日~2026 年 3 月 31 日，共 304 天；P2 为 2026 年 4 月 1 日~2026 年 6 月 30 日，共 91 天。全文均按这两个整月阶段计算。</li>
+    <li><strong>日均</strong> = 阶段累计 ÷ 阶段天数。例：P2 支付日均 = 2,199,163 ÷ 91 = 24,167；P1 支付日均 = 8,425,888 ÷ 304 = 27,717。</li>
+    <li><strong>全周期率值</strong>（附录速查表中的 2.84% 等）= 全周期分子加总 ÷ 分母加总，不是逐月率值求平均。</li>
+  </ul>
+
+  <h3>C2. 变化幅度口径：变化率 / 变化倍数 / 百分点</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>正文写法</th><th>计算方式</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td>规模变化率（−12.8% 等）</td><td>(P2日均 − P1日均) ÷ P1日均 × 100%</td><td>(24,167−27,717)÷27,717 ≈ −12.8%</td></tr>
+        <tr><td>率值变化倍数（约 8.7 倍等）</td><td>P2 率值 ÷ P1 率值</td><td>1.091% ÷ 0.125% ≈ 8.7 倍</td></tr>
+        <tr><td>率值差（+1.65 pct）</td><td>P2 率值 − P1 率值（单位：百分点）</td><td>4.15% − 2.50% = +1.65 pct</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout co-amber">
+    <b class="t">易混淆点</b>
+    “百分点（pct）”是率值的<strong>直接相减</strong>；而“变化倍数”是率值的<strong>相除</strong>。例如超时率从 2.50% 升至 4.15%，相差 1.65 个百分点，约为 1.7 倍——两者不能混用。
+  </div>
+
+  <h3>C3. 支付订单与履约执行任务的跨层级关系</h3>
+  <ul>
+<li><strong>执行任务/支付订单比</strong> = 履约执行任务数 ÷ 支付订单量。全周期 = 11,293,661 ÷ 10,625,051 = 1.063；按整月汇总，P1 = 8,302,927 ÷ 8,425,888 ≈ 0.985，P2 = 2,990,734 ÷ 2,199,163 ≈ 1.360。</li>
+    <li>由于一笔支付订单可能拆成多个执行任务，该比值不应直接解释为异常订单率，也不要求接近 1；它用于观察跨层级单据关系是否发生变化。多单分拣上线、补拣、重拣和任务关闭规则都可能影响该比值。</li>
+    <li><strong>聚合原则</strong>：任何跨店 / 跨天 / 跨月汇总，一律<strong>先加总分子、分母，再相除</strong>；不取各时段率值的算术平均。单日、单店率值则直接用当日 / 当店分子 ÷ 分母。</li>
+  </ul>
+
+  <h3>C4. Spearman 秩相关系数与 p 值</h3>
+  <div style="background:#eef4ff;border:1px solid #b8ccf0;border-radius:10px;padding:14px 18px;margin:10px 0;font-family:Consolas,'Courier New',monospace;font-size:13.5px;color:var(--ink);">
+    ρ = 1 − 6·Σd² ÷ [ n·(n²−1) ]&nbsp;&nbsp;&nbsp;（d = 每个样本在两列中的名次之差，n = 样本天数）
+  </div>
+  <p>计算四步：① 每天记录两个指标值；② 各自从小到大排成名次（秩）；③ 逐天求两列名次之差 d，平方后加总得 Σd²；④ 代入公式。名次完全对齐时 Σd²=0、ρ=1；错位越严重，从 1 中扣掉的越多。</p>
+  <p><strong>5 天迷你示例</strong>（客诉率 vs 质量反馈率）：两天名次差各为 ±1，其余全对齐 → Σd² = 2 → ρ = 1 − 6×2 ÷ [5×(25−1)] = <strong>0.90</strong>。</p>
+  <p><strong>本报告实际案例</strong>：P2 段客诉率 vs 质量反馈率，相关分析样本范围为 2026 年 4 月~6 月，共 91 天；正文相关系数应以整月口径重新计算后使用。</p>
+  <p><strong>p 值</strong> = 两指标实际无关时，纯凭偶然得到当前相关强度的概率。本例 p = 5.5×10⁻³⁰（趋近于零），故写为 p&lt;0.001，统计高度显著。</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>报告位置</th><th class="num">rho</th><th class="num">样本</th></tr></thead>
+      <tbody>
+        <tr><td>2025-09：日支付量 vs 超时率 / 客诉率</td><td class="num">0.66 / 0.73</td><td class="num">9 月 30 天</td></tr>
+        <tr><td>P2：客诉率 vs 质量反馈率</td><td class="num">待按整月重算</td><td class="num">P2 91 天</td></tr>
+        <tr><td>P2：跨层级数量差异 vs 超时率</td><td class="num">0.976</td><td class="num">P2 91 天</td></tr>
+        <tr><td>P1：门店规模 vs 质量反馈率</td><td class="num">0.64（p=0.048）</td><td class="num">10 家门店</td></tr>
+      </tbody>
+    </table>
+  </div>
+<p><strong>为何使用排序相关性</strong>：率值数据存在偏态与异常时期，排序相关性只看高低次序是否同步，对极端值相对更稳健，更适合回答“客诉高的时期，质量反馈是否也更高”这类问题。</p>
+
+  <h3>C5. 变异系数 CV（门店离散度）</h3>
+  <div style="background:#eef4ff;border:1px solid #b8ccf0;border-radius:10px;padding:14px 18px;margin:10px 0;font-family:Consolas,'Courier New',monospace;font-size:13.5px;color:var(--ink);">
+    CV = 标准差 ÷ 均值 × 100%
+  </div>
+<p>用于衡量 10 家门店某指标相互间的离散程度：按整月口径，P1 客诉率 CV = 4.90%，P2 = 1.16%，说明 P2 各店客诉率水平更加接近，支持“全平台同步变化”的判断。</p>
+
+  <h3>C6. 门店占比类指标</h3>
+  <ul>
+    <li><strong>门店支付占比</strong>（9.66%~10.25%）= 该店支付订单量 ÷ 全平台支付订单量 × 100%。</li>
+    <li><strong>客诉增量占比</strong>（8.45%~11.93%）= 该店（P2 客诉量 − P1 客诉量）÷ 全平台（P2 客诉量 − P1 客诉量）× 100%，用于判断恶化是否被个别门店主导。</li>
+  </ul>
+
+  <h3>C7. 门店综合评分与分级公式</h3>
+  <div style="background:#eef4ff;border:1px solid #b8ccf0;border-radius:10px;padding:14px 18px;margin:10px 0;font-family:Consolas,'Courier New',monospace;font-size:13.5px;color:var(--ink);">
+    minmax(指标) = (该店值 − 10 店最小值) ÷ (10 店最大值 − 10 店最小值) × 100<br>
+    综合评分 = 0.4·minmax(超时率) + 0.3·minmax(客诉率) + 0.2·minmax(少送率) + 0.1·minmax(质量反馈率)
+  </div>
+  <p>评分越低越好（各率越低，标准化后贡献越小）；按 P1 期评分<strong>升序三等分</strong>：A 级（前 1/3）最优、C 级（后 1/3）需重点跟进。权重反映履约质量影响优先级：时效 &gt; 客诉 &gt; 差错 &gt; 商品质量。分级思路正文 4.2 已述，此处补充具体公式。</p>
+
+  <h3>C8. 周末 / 工作日口径</h3>
+  <p><strong>周末</strong> = 周六、周日；<strong>工作日</strong> = 周一至周五。周末率值 = 周末各日分子加总 ÷ 分母加总（不取各日率值平均）。正文“周末效应”中的 2.57% / 2.47%（P1）、5.50% / 3.60%（P2）均按此口径计算；超时率分母为支付订单量。</p>
+
+  <div class="callout co-red">
+    <b class="t">解读边界</b>
+    相关 ≠ 因果：本节所有相关系数仅描述“同涨同跌”的程度，不构成因果证明；P2 相关系数应以 2026 年 4 月~6 月的 91 天整月样本重新计算后解读。
+  </div>
+</section>
+
+<footer>
+  《即时零售门店履约质量分析与运营优化报告》 · 数据来源为公开数据集 · 结论基于数据相关性推断，不等同于业务事实
+</footer>
+
+</div>
+</body>
+</html>
+
