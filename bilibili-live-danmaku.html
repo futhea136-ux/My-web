@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>B站直播实时弹幕采集与 AI 看板</title>
+    <style>
+      :root {
+        --bg: #101827;
+        --panel: #172235;
+        --panel2: #1d2a40;
+        --line: rgba(151, 172, 207, 0.22);
+        --text: #eef5ff;
+        --muted: #9eb5d9;
+        --blue: #00a1d6;
+        --pink: #fb7299;
+        --green: #8df36d;
+        --yellow: #ffd35b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(251, 114, 153, 0.16), transparent 30%),
+          radial-gradient(circle at 88% 10%, rgba(0, 161, 214, 0.16), transparent 28%),
+          linear-gradient(135deg, #101827, #151e2e 48%, #0d1420);
+      }
+      .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+      header {
+        min-height: 88vh;
+        display: grid;
+        align-content: center;
+        gap: 28px;
+        padding: 56px 0 36px;
+      }
+      .badge {
+        width: fit-content;
+        padding: 8px 14px;
+        border: 1px solid rgba(0, 161, 214, 0.4);
+        border-radius: 999px;
+        color: #bfefff;
+        background: rgba(0, 161, 214, 0.12);
+        font-weight: 800;
+      }
+      h1 {
+        max-width: 900px;
+        margin: 0;
+        font-size: clamp(42px, 7vw, 84px);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+      .lead {
+        max-width: 780px;
+        margin: 0;
+        color: #c9d8f2;
+        font-size: 22px;
+        line-height: 1.7;
+      }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 20px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 900;
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .btn.primary {
+        border: 0;
+        background: linear-gradient(135deg, var(--blue), var(--pink));
+      }
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(7, 11, 19, 0.72);
+        backdrop-filter: blur(10px);
+      }
+      .modal-mask.is-open { display: flex; }
+      .modal {
+        width: min(520px, 100%);
+        padding: 28px;
+        border: 1px solid rgba(151, 172, 207, 0.36);
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(31, 42, 64, 0.98), rgba(19, 29, 45, 0.98));
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+      }
+      .modal h3 { margin: 0 0 10px; font-size: 28px; }
+      .modal p { margin: 0 0 18px; color: #bfd0ec; line-height: 1.7; }
+      .modal label {
+        display: block;
+        margin-bottom: 8px;
+        color: #d9e7ff;
+        font-weight: 900;
+      }
+      .modal input {
+        width: 100%;
+        height: 48px;
+        padding: 0 14px;
+        border: 1px solid rgba(151, 172, 207, 0.4);
+        border-radius: 8px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        font-size: 16px;
+      }
+      .modal input:focus { border-color: var(--blue); }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .modal-error {
+        min-height: 22px;
+        margin-top: 10px;
+        color: #ffadc8;
+        font-weight: 800;
+      }
+      section {
+        margin: 22px 0;
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: linear-gradient(145deg, rgba(29, 42, 64, 0.94), rgba(20, 29, 45, 0.94));
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+      }
+      h2 { margin: 0 0 18px; font-size: 30px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .card {
+        min-height: 150px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+      .card strong {
+        display: block;
+        margin-bottom: 10px;
+        color: #eaf6ff;
+        font-size: 20px;
+      }
+      .card p, li { color: #bfd0ec; line-height: 1.65; }
+      .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+      .kpi {
+        padding: 16px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.055);
+        text-align: center;
+      }
+      .kpi span { display: block; color: var(--muted); font-size: 14px; }
+      .kpi b { display: block; margin-top: 8px; color: var(--green); font-size: 26px; }
+      .tags { display: flex; flex-wrap: wrap; gap: 10px; }
+      .tags span {
+        padding: 8px 13px;
+        border-radius: 999px;
+        color: #fff;
+        font-weight: 900;
+      }
+      .tags span:nth-child(5n + 1) { background: #2f8f63; }
+      .tags span:nth-child(5n + 2) { background: #277c98; }
+      .tags span:nth-child(5n + 3) { background: #b64b70; }
+      .tags span:nth-child(5n + 4) { background: #7355b6; }
+      .tags span:nth-child(5n + 5) { background: #cfa43b; color: #211600; }
+      .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      footer { padding: 36px 0 56px; color: var(--muted); text-align: center; }
+      @media print {
+        @page { size: A4; margin: 10mm; }
+        body { background: #101827; }
+        header { min-height: auto; padding: 28px 0 22px; }
+        .hero h1 { font-size: 34px; }
+        .hero p { font-size: 14px; }
+        .hero-actions, .modal { display: none !important; }
+        main { padding: 24px 0 10px; }
+        .section { break-inside: avoid; }
+        .card { break-inside: avoid; }
+        footer { padding: 18px 0 8px; }
+      }
+      @media (max-width: 900px) {
+        .grid, .split { grid-template-columns: 1fr; }
+        .kpis { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <div class="badge">Windows 桌面端 · B站直播运营 · 本地规则版 AI</div>
+        <h1>B站直播实时弹幕采集与 AI 看板</h1>
+        <p class="lead">一个面向直播运营场景的桌面工具：实时采集弹幕、展示核心数据、识别高价值弹幕，并在直播后生成 AI 复盘报告。</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="./bilibili-live-danmaku-ai-dashboard-latest.md">查看交付说明</a>
+          <a id="downloadZipBtn" class="btn" href="./BilibiliLiveDanmaku-latest-ai-package.zip">下载交付 ZIP</a>
+        </div>
+      </header>
+
+      <section>
+        <h2>核心能力</h2>
+        <div class="grid">
+          <div class="card"><strong>实时弹幕采集</strong><p>连接 B 站直播间，实时接收弹幕事件，支持二维码登录和登录态保存。</p></div>
+          <div class="card"><strong>直播运营看板</strong><p>展示在线人数、热度、累计观看、互动率、弹幕速率、点赞分享和礼物等指标。</p></div>
+          <div class="card"><strong>本地规则版 AI</strong><p>无需联网，无需 API Key，基于规则进行摘要、情绪、风险、问题和购买意图分析。</p></div>
+          <div class="card"><strong>AI 弹幕筛选</strong><p>按问题、购买意图、负向反馈、好评、重复弹幕快速筛选实时弹幕。</p></div>
+          <div class="card"><strong>AI 直播复盘</strong><p>一键生成本场直播复盘，覆盖概览、情绪、热点问题、风险和运营建议。</p></div>
+          <div class="card"><strong>报表导出</strong><p>导出 CSV 报表，指标字段中文化，并包含 AI 洞察与复盘全文。</p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>运营指标覆盖</h2>
+        <div class="kpis">
+          <div class="kpi"><span>实时在线</span><b>UV</b></div>
+          <div class="kpi"><span>弹幕总数</span><b>弹幕</b></div>
+          <div class="kpi"><span>互动强度</span><b>互动</b></div>
+          <div class="kpi"><span>购买意图</span><b>转化</b></div>
+          <div class="kpi"><span>负向反馈</span><b>风险</b></div>
+          <div class="kpi"><span>直播复盘</span><b>报告</b></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>AI 弹幕分类</h2>
+        <div class="tags">
+          <span>问题</span>
+          <span>购买意图</span>
+          <span>负向反馈</span>
+          <span>好评</span>
+          <span>重复弹幕</span>
+          <span>普通弹幕</span>
+        </div>
+      </section>
+
+      <section class="split">
+        <div>
+          <h2>技术方案</h2>
+          <ul>
+            <li>Electron 构建 Windows 桌面程序。</li>
+            <li>主进程负责登录、直播间连接、弹幕协议解析和数据导出。</li>
+            <li>渲染层负责实时看板、趋势图、词云、筛选和复盘展示。</li>
+            <li>AI 规则分析模块本地运行，可作为后续大模型能力的兜底层。</li>
+          </ul>
+        </div>
+        <div>
+          <h2>交付结果</h2>
+          <ul>
+            <li>可运行 Windows 程序。</li>
+            <li>桌面快捷方式入口。</li>
+            <li>HTML 宣传页。</li>
+            <li>MD 交付说明。</li>
+            <li>Skill 固化包。</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer>更新时间：2026-08-01 · Bilibili Live Danmaku AI Dashboard</footer>
+    </main>
+    <div id="downloadModal" class="modal-mask" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="downloadTitle">
+        <h3 id="downloadTitle">交付 ZIP 下载验证</h3>
+        <p>请输入访问秘钥，验证通过后开始下载。</p>
+        <label for="downloadKeyInput">访问秘钥</label>
+        <input id="downloadKeyInput" type="password" autocomplete="off" placeholder="请输入秘钥" />
+        <div id="downloadKeyError" class="modal-error"></div>
+        <div class="modal-actions">
+          <button id="cancelDownloadBtn" class="btn" type="button">取消</button>
+          <button id="confirmDownloadBtn" class="btn primary" type="button">确认下载</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      (() => {
+        const downloadUrl = './BilibiliLiveDanmaku-latest-ai-package.zip';
+        const expectedKey = String.fromCharCode(64, 35, 102, 120, 57, 56, 52, 55, 57, 48, 57, 48, 50);
+        const button = document.getElementById('downloadZipBtn');
+        const modal = document.getElementById('downloadModal');
+        const input = document.getElementById('downloadKeyInput');
+        const error = document.getElementById('downloadKeyError');
+        const cancel = document.getElementById('cancelDownloadBtn');
+        const confirm = document.getElementById('confirmDownloadBtn');
+
+        function openModal() {
+          modal.classList.add('is-open');
+          modal.setAttribute('aria-hidden', 'false');
+          input.value = '';
+          error.textContent = '';
+          setTimeout(() => input.focus(), 0);
+        }
+
+        function closeModal() {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function verifyAndDownload() {
+          if (input.value !== expectedKey) {
+            error.textContent = '秘钥不正确，请重新输入。';
+            input.select();
+            return;
+          }
+          closeModal();
+          window.location.href = downloadUrl;
+        }
+
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          openModal();
+        });
+        cancel.addEventListener('click', closeModal);
+        confirm.addEventListener('click', verifyAndDownload);
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') verifyAndDownload();
+          if (event.key === 'Escape') closeModal();
+        });
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal) closeModal();
+        });
+      })();
+    </script>
+  </body>
+</html>
