@@ -79,6 +79,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
             display: flex; align-items: center; justify-content: center;
             font-size: 24px;
         }
+        .city-level-card { display: none !important; }
         .header-title {
             font-size: 26px;
             font-weight: 700;
@@ -334,7 +335,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         @media (max-width: 768px) {
             .kpi-row { grid-template-columns: repeat(2, 1fr); }
             .chart-card.col-4, .chart-card.col-6, .chart-card.col-8 { grid-column: span 12; }
-            .header-title { font-size: 20px; }
+            .city-level-card { display: none !important; }
+        .header-title { font-size: 20px; }
         }
     
 /* dynamic-chart-insights */
@@ -370,7 +372,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         <div class="header-title" contenteditable="true" spellcheck="false">母婴行业经营分析看板</div>
     </div>
     <div class="header-right">
-        <span class="edit-hint">标题可编辑 · 图表支持点击筛选联动</span>
+        <span class="edit-hint">标题可编辑 · 图表点击可联动筛选</span>
         <span class="badge">数据周期：2025年全年</span>
     </div>
 </div>
@@ -396,7 +398,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 <!-- Risk Panel -->
 <div class="risk-panel" id="riskPanel">
     <div class="risk-head">
-        <div class="risk-title">当前筛选下需关注指标</div>
+        <div class="risk-title">当前筛选下的重点观察</div>
         <div class="risk-scope" id="riskScope">全量样本</div>
     </div>
     <div class="risk-grid" id="riskGrid"></div>
@@ -413,6 +415,14 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         <div class="chart-body tall" id="chart-monthly"></div>
     </div>
 
+
+    <div class="chart-card col-8 clickable">
+        <div class="chart-header">
+            <div class="chart-title" contenteditable="true" spellcheck="false">月度到店转化率与客单价</div>
+            <span class="chart-tag" data-tag="m">点击筛选月份</span>
+        </div>
+        <div class="chart-body tall" id="chart-conversion-quality"></div>
+    </div>
     <div class="chart-card col-4 clickable">
         <div class="chart-header">
             <div class="chart-title" contenteditable="true" spellcheck="false">门店类型销售占比</div>
@@ -429,7 +439,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         <div class="chart-body" id="chart-cat1"></div>
     </div>
 
-    <div class="chart-card col-6">
+    <div class="chart-card col-6 city-level-card">
         <div class="chart-header">
             <div class="chart-title" contenteditable="true" spellcheck="false">二级品类销售额 TOP10</div>
         </div>
@@ -444,9 +454,9 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         <div class="chart-body" id="chart-province"></div>
     </div>
 
-    <div class="chart-card col-6">
+    <div class="chart-card col-6 city-level-card">
         <div class="chart-header">
-            <div class="chart-title" contenteditable="true" spellcheck="false">城市等级销售分布</div>
+            <div class="chart-title" contenteditable="true" spellcheck="false">城市等级销售分布（辅助）</div>
         </div>
         <div class="chart-body" id="chart-city"></div>
     </div>
@@ -497,7 +507,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 
     <div class="chart-card col-8 clickable">
         <div class="chart-header">
-            <div class="chart-title" contenteditable="true" spellcheck="false">月度品类销售热力图</div>
+            <div class="chart-title" contenteditable="true" spellcheck="false">月度品类销售波动</div>
             <span class="chart-tag" data-tag="m">点击筛选月份</span>
         </div>
         <div class="chart-body heat" id="chart-heatmap"></div>
@@ -505,7 +515,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 
     <div class="chart-card col-4">
         <div class="chart-header">
-            <div class="chart-title" contenteditable="true" spellcheck="false">流量入口场景分布</div>
+            <div class="chart-title" contenteditable="true" spellcheck="false">流量入口场景分布（流量来源）</div>
         </div>
         <div class="chart-body heat" id="chart-scene"></div>
     </div>
@@ -744,6 +754,40 @@ function renderKPI(a) {
 }
 
 // ================= 各图表渲染 =================
+function renderConversionQuality(a) {
+    const dm = D.dims;
+    const pv = pvByMonth();
+    const conv = a.byMo.map((orders, i) => pv[i] ? orders / pv[i] * 100 : 0);
+    const aov = a.byMo.map((orders, i) => orders ? a.byM[i] / orders : 0);
+    initChart('chart-conversion-quality').setOption({
+        color: ['#ee6666', '#73c0de'],
+        tooltip: { trigger: 'axis', formatter: function(ps) {
+            let s = ps[0].axisValue + '<br/>';
+            ps.forEach(p => { s += p.marker + p.seriesName + ': ' + (p.seriesName === '到店转化率' ? p.value.toFixed(2) + '%' : '¥' + p.value.toFixed(2)) + '<br/>'; });
+            return s;
+        }},
+        legend: { data: ['到店转化率', '客单价'], top: 5, textStyle: { color: '#666' } },
+        toolbox: TOOLBOX,
+        grid: { left: '4%', right: '4%', top: 45, bottom: 45, containLabel: true },
+        dataZoom: [{ type: 'slider', height: 16, bottom: 5 }],
+        xAxis: { type: 'category', data: dm.months, axisLabel: { color: '#666' } },
+        yAxis: [
+            { type: 'value', name: '转化率(%)', axisLabel: { color: '#666', formatter: v => v.toFixed(1) + '%' }, splitLine: { lineStyle: { color: '#eee' } } },
+            { type: 'value', name: '客单价(元)', axisLabel: { color: '#666', formatter: v => '¥' + v.toFixed(0) }, splitLine: { show: false } }
+        ],
+        series: [
+            { name: '到店转化率', type: 'line', data: conv, smooth: true, symbolSize: 6, yAxisIndex: 0 },
+            { name: '客单价', type: 'line', data: aov, smooth: true, symbolSize: 6, yAxisIndex: 1 }
+        ]
+    }, true);
+    const valid = conv.map((v, i) => ({ i, conv: v, aov: aov[i] })).filter(x => pv[x.i] > 0);
+    if (valid.length) {
+        const bestConv = valid.reduce((x, y) => y.conv > x.conv ? y : x);
+        const bestAov = valid.reduce((x, y) => y.aov > x.aov ? y : x);
+        setInsight('chart-conversion-quality', '<b>观察：</b>' + currentScopeText() + '，转化率最高月份为 ' + dm.months[bestConv.i] + '（' + bestConv.conv.toFixed(2) + '%），客单价最高月份为 ' + dm.months[bestAov.i] + '（¥' + bestAov.aov.toFixed(2) + '）。两项指标仅用于趋势对比，原因需结合活动、商品和流量来源进一步核查。');
+    }
+    charts['chart-conversion-quality'].off('click').on('click', p => { if (p.seriesName === '到店转化率' || p.seriesName === '客单价') toggle('m', p.dataIndex); });
+}
 function renderMonthly(a) {
     const dm = D.dims;
     initChart('chart-monthly').setOption({
@@ -1269,6 +1313,7 @@ function render() {
     renderKPI(a);
     renderRiskPanel(a);
     renderMonthly(a);
+    renderConversionQuality(a);
     renderStore(a);
     renderCat1(a);
     renderCat2(a);
