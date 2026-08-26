@@ -407,7 +407,14 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 <!-- Charts Grid -->
 <div class="chart-grid">
 
-    <div class="chart-card col-8 clickable">
+    <div class="chart-card col-4 clickable">
+        <div class="chart-header">
+            <div class="chart-title" contenteditable="true" spellcheck="false">门店类型销售占比</div>
+            <span class="chart-tag" data-tag="s">点击筛选</span>
+        </div>
+        <div class="chart-body tall" id="chart-store"></div>
+    </div>
+    <div class="chart-card col-6 clickable">
         <div class="chart-header">
             <div class="chart-title" contenteditable="true" spellcheck="false">月度销售额与订单趋势</div>
             <span class="chart-tag" data-tag="m">点击筛选月份</span>
@@ -416,19 +423,12 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     </div>
 
 
-    <div class="chart-card col-8 clickable">
+    <div class="chart-card col-6 clickable">
         <div class="chart-header">
             <div class="chart-title" contenteditable="true" spellcheck="false">月度到店转化率与客单价</div>
             <span class="chart-tag" data-tag="m">点击筛选月份</span>
         </div>
         <div class="chart-body tall" id="chart-conversion-quality"></div>
-    </div>
-    <div class="chart-card col-4 clickable">
-        <div class="chart-header">
-            <div class="chart-title" contenteditable="true" spellcheck="false">门店类型销售占比</div>
-            <span class="chart-tag" data-tag="s">点击筛选</span>
-        </div>
-        <div class="chart-body tall" id="chart-store"></div>
     </div>
 
     <div class="chart-card col-6 clickable">
