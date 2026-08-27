@@ -1332,7 +1332,6 @@ function render() {
     renderBrand(a);
     renderHeatmap(a);
     renderScene(a);
-    document.querySelectorAll('[data-scene-metric]').forEach(btn => btn.onclick = () => { sceneMetric = btn.dataset.sceneMetric; render(); });
     renderChips();
     renderInsights(a);
 }
