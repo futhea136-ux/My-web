@@ -297,9 +297,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
             padding-left: 10px;
         }
         .chart-title:hover { background: #f0f2f5; }
-        .chart-title:focus { background: #e8ecf1; }
-        .metric-switch { display: inline-flex; gap: 4px; margin-left: auto; }
-        .metric-switch button { border: 1px solid #d8def0; background: #fff; color: #7782a3; border-radius: 10px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+        .chart-title:focus { background: #e8ecf1; }`r`n        .metric-switch button { border: 1px solid #d8def0; background: #fff; color: #7782a3; border-radius: 10px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
         .metric-switch button.active { color: #fff; background: #667eea; border-color: #667eea; }
         .metric-switch button:disabled { color: #b8becd; background: #f5f6f9; cursor: not-allowed; }
         .metric-empty { height: 100%; display: flex; align-items: center; justify-content: center; color: #7d879d; font-size: 13px; text-align: center; padding: 0 24px; box-sizing: border-box; }        .chart-tag {
@@ -519,7 +517,6 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     <div class="chart-card col-4">
         <div class="chart-header">
             <div class="chart-title" contenteditable="true" spellcheck="false">流量入口场景分布（流量来源）</div>
-            <div class="metric-switch" role="group" aria-label="流量入口指标"><button type="button" data-scene-metric="pv" class="active">PV</button><button type="button" data-scene-metric="sales" disabled title="当前数据未提供流量入口销售额">销售额</button></div>
         </div>
         <div class="chart-body heat" id="chart-scene"></div>
     </div>
@@ -715,7 +712,6 @@ function topEntries(sumObj, names, n) {
 
 // ================= 图表实例 =================
 const charts = {};
-let sceneMetric = 'pv';
 function initChart(id) {
     const el = document.getElementById(id);
     if (!el) return null;
