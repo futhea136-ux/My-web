@@ -1076,11 +1076,6 @@ function renderHeatmap(a) {
 
 function renderScene(a) {
     const dm = D.dims;
-    const el = document.getElementById('chart-scene');
-    if (sceneMetric === 'sales') {
-        el.innerHTML = '<div class="metric-empty">当前数据未提供“流量入口 × 销售额”明细，暂不能按流量入口展示销售额。</div>';
-        return;
-    }
     initChart('chart-scene').setOption({
         color: COLORS,
         tooltip: { trigger: 'item', formatter: '{b}<br/>PV: {c} ({d}%)' },
