@@ -776,7 +776,6 @@ function renderConversionQuality(a) {
     if (valid.length) {
         const bestConv = valid.reduce((x, y) => y.conv > x.conv ? y : x);
         const bestAov = valid.reduce((x, y) => y.aov > x.aov ? y : x);
-        setInsight('chart-conversion-quality', '<b>观察：</b>' + currentScopeText() + '，转化率最高月份为 ' + dm.months[bestConv.i] + '（' + bestConv.conv.toFixed(2) + '%），客单价最高月份为 ' + dm.months[bestAov.i] + '（¥' + bestAov.aov.toFixed(2) + '）。两项指标仅用于趋势对比，原因需结合活动、商品和流量来源进一步核查。');
     }
     charts['chart-conversion-quality'].off('click').on('click', p => { if (p.seriesName === '到店转化率' || p.seriesName === '客单价') toggle('m', p.dataIndex); });
 }
@@ -1287,7 +1286,6 @@ function render() {
     renderHeatmap(a);
     renderScene(a);
     renderChips();
-    renderInsights(a);
 }
 
 // ================= 初始化筛选栏 =================
