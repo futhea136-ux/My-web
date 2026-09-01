@@ -397,15 +397,6 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 <div class="kpi-row" id="kpiRow"></div>
 
 
-<!-- Risk Panel -->
-<div class="risk-panel" id="riskPanel">
-    <div class="risk-head">
-        <div class="risk-title">当前筛选下的重点观察</div>
-        <div class="risk-scope" id="riskScope">全量样本</div>
-    </div>
-    <div class="risk-grid" id="riskGrid"></div>
-</div>
-
 <!-- Charts Grid -->
 <div class="chart-grid">
 
@@ -1276,42 +1267,10 @@ function renderInsights(a) {
 }
 
 
-function riskClass(level) { return level === '高' ? 'high' : (level === '中' ? 'mid' : 'low'); }
-function riskIcon(level) { return level === '高' ? '高' : (level === '中' ? '中' : '低'); }
-function renderRiskPanel(a) {
-    const dm = D.dims;
-    const scopeEl = document.getElementById('riskScope');
-    const grid = document.getElementById('riskGrid');
-    if (!scopeEl || !grid) return;
-    const scope = currentScopeText();
-    const totalSales = a.sales || 0;
-    const conv = a.pv ? a.orders / a.pv * 100 : 0;
-    const baseConv = TOTAL.pv ? TOTAL.orders / TOTAL.pv * 100 : 0;
-    const promoSales = a.byMkt.reduce((sum, v, i) => dm.mkts[i] === '自然' ? sum : sum + v, 0);
-    const promoRate = totalSales ? promoSales / totalSales * 100 : 0;
-    const topP = topIndex(a.byP);
-    const topCat = topIndex(a.byC1);
-    const provRate = totalSales ? topP.val / totalSales * 100 : 0;
-    const catRate = totalSales ? topCat.val / totalSales * 100 : 0;
-    const convLevel = conv < baseConv * 0.85 ? '高' : (conv < baseConv ? '中' : '低');
-    const promoLevel = promoRate >= 80 ? '高' : (promoRate >= 60 ? '中' : '低');
-    const provLevel = provRate >= 45 ? '高' : (provRate >= 30 ? '中' : '低');
-    const catLevel = catRate >= 50 ? '高' : (catRate >= 35 ? '中' : '低');
-    scopeEl.textContent = scope + ' · 当前口径';
-    const cards = [
-        { level: convLevel, name: '转化率低于基准', desc: '到店转化率 <b>' + conv.toFixed(2) + '%</b>，全量基准约 <b>' + baseConv.toFixed(2) + '%</b>。低于基准时需复核流量来源和承接效率。' },
-        { level: promoLevel, name: '促销占比偏高', desc: '非自然营销销售占比约 <b>' + promoRate.toFixed(1) + '%</b>。需结合毛利、补贴和价格带复核。' },
-        { level: provLevel, name: '省份贡献集中', desc: '最高省份为 <b>' + dm.provinces[topP.idx] + '</b>，占当前销售额 <b>' + provRate.toFixed(1) + '%</b>。占比过高时需关注区域波动传导。' },
-        { level: catLevel, name: '品类贡献集中', desc: '最高品类为 <b>' + dm.cats1[topCat.idx] + '</b>，占当前销售额 <b>' + catRate.toFixed(1) + '%</b>。占比过高时需关注品类结构弹性。' }
-    ];
-    grid.innerHTML = cards.map(c => '<div class="risk-card ' + riskClass(c.level) + '"><div class="risk-icon">' + riskIcon(c.level) + '</div><div><div class="risk-name">' + c.name + ' · ' + c.level + '风险</div><div class="risk-desc">' + c.desc + '</div></div></div>').join('');
-}
-
 // ================= 主渲染 =================
 function render() {
     const a = aggregate();
     renderKPI(a);
-    renderRiskPanel(a);
     renderMonthly(a);
     renderConversionQuality(a);
     renderStore(a);
